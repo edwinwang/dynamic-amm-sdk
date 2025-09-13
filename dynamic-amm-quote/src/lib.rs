@@ -60,6 +60,7 @@ pub fn compute_quote(
     in_amount: u64,
     quote_data: QuoteData,
 ) -> anyhow::Result<QuoteResult> {
+    
     let QuoteData {
         mut pool,
         vault_a,
@@ -73,6 +74,7 @@ pub fn compute_quote(
         clock,
         stake_data,
     } = quote_data;
+
 
     let activation_type =
         ActivationType::try_from(pool.bootstrapping.activation_type).map_err(|e| anyhow!(e))?;
@@ -88,7 +90,11 @@ pub fn compute_quote(
         "Swap is disabled"
     );
 
-    update_base_virtual_price(&mut pool, &clock, stake_data)?;
+    // Only call update_base_virtual_price if we have stake_data
+    // If stake_data is empty, it means the virtual price was already updated in the update function
+    if !stake_data.is_empty() {
+        update_base_virtual_price(&mut pool, &clock, stake_data)?;
+    }
 
     let current_time: u64 = clock.unix_timestamp.try_into()?;
 
